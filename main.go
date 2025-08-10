@@ -228,6 +228,44 @@ func main() {
 		})
 	}).Methods("GET")
 
+	// Echo endpoint - returns exactly what it receives
+	r.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
+		// Read the request body
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Error reading request body for echo: %v", err)
+			http.Error(w, "Error reading request body", http.StatusBadRequest)
+			return
+		}
+
+		// Create response with all request information
+		response := map[string]interface{}{
+			"method":      r.Method,
+			"url":         r.URL.String(),
+			"path":        r.URL.Path,
+			"query":       r.URL.Query(),
+			"headers":     r.Header,
+			"body":        string(body),
+			"host":        r.Host,
+			"remoteAddr":  r.RemoteAddr,
+			"userAgent":   r.UserAgent(),
+			"contentType": r.Header.Get("Content-Type"),
+			"timestamp":   time.Now().Format(time.RFC3339),
+		}
+
+		// Try to parse body as JSON if it's JSON content
+		if strings.Contains(r.Header.Get("Content-Type"), "application/json") && len(body) > 0 {
+			var jsonBody interface{}
+			if err := json.Unmarshal(body, &jsonBody); err == nil {
+				response["parsedBody"] = jsonBody
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	})
+
 	// Catch-all handler for unmatched routes (must be last)
 	r.PathPrefix("/").HandlerFunc(catchAllHandler)
 
@@ -250,6 +288,7 @@ func main() {
 	log.Println("  GET    /products/{id}")
 	log.Println("  POST   /orders")
 	log.Println("  GET    /health")
+	log.Println("  *      /echo     (returns what it receives)")
 	log.Println()
 
 	if err := http.ListenAndServe(":"+port, r); err != nil {

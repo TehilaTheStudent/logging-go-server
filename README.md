@@ -36,17 +36,18 @@ dummy-logger-go-server/
 
 ## Available Endpoints
 
-Based on the OpenAPI specification:
+Based on the OpenAPI specification, the server provides these endpoints:
 
 - `GET /users` - Get all users
 - `POST /users` - Create a new user
 - `GET /users/{id}` - Get user by ID
 - `PUT /users/{id}` - Update user
 - `DELETE /users/{id}` - Delete user
-- `GET /products` - Get all products (supports query parameters)
+- `GET /products` - Get all products
 - `GET /products/{id}` - Get product by ID
 - `POST /orders` - Create a new order
 - `GET /health` - Health check endpoint
+- `* /echo` - Echo endpoint (returns exactly what it receives)
 
 ## Running the Server
 
@@ -100,13 +101,46 @@ Based on the OpenAPI specification:
 
 ## Example Usage
 
+Once the server is running, you can test it with curl:
+
+### Echo Endpoint
+Test the echo endpoint that returns exactly what it receives:
+
 ```bash
-# Test with curl
+# POST with JSON data
+curl -X POST http://localhost:8080/echo \
+  -H "Content-Type: application/json" \
+  -H "X-Custom-Header: test-value" \
+  -d '{"message": "hello world", "data": [1, 2, 3]}'
+
+# GET with query parameters
+curl "http://localhost:8080/echo?param1=value1&param2=value2"
+
+# PUT with form data
+curl -X PUT http://localhost:8080/echo \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "field1=value1&field2=value2"
+```
+
+The echo endpoint returns a JSON response containing:
+- `method`: HTTP method used
+- `url`: Full URL with query parameters
+- `path`: URL path
+- `query`: Parsed query parameters
+- `headers`: All request headers
+- `body`: Raw request body as string
+- `parsedBody`: JSON-parsed body (if Content-Type is application/json)
+- `host`: Host header value
+- `remoteAddr`: Client's remote address
+- `userAgent`: User-Agent header
+- `contentType`: Content-Type header
+- `timestamp`: Request timestamp
+
+### Other Endpoints
 curl -X GET http://localhost:8080/users
 curl -X POST http://localhost:8080/users -H "Content-Type: application/json" -d '{"name":"Test User","email":"test@example.com"}'
 curl -X GET http://localhost:8080/products?category=electronics&limit=5
 curl -X GET http://localhost:8080/nonexistent-route  # This will be logged as unmatched
-```
 
 ## Logging Output
 
