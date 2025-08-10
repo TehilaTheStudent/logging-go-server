@@ -50,6 +50,8 @@ Based on the OpenAPI specification:
 
 ## Running the Server
 
+### Option 1: Run with Go (Local Development)
+
 1. Install dependencies:
    ```bash
    go mod tidy
@@ -61,6 +63,40 @@ Based on the OpenAPI specification:
    ```
 
 3. The server will start on port 8080 (or the port specified in the `PORT` environment variable)
+
+### Option 2: Run with Docker
+
+1. Build and run with Docker Compose (recommended):
+   ```bash
+   docker-compose up --build
+   ```
+
+2. Or build and run with Docker directly:
+   ```bash
+   # Build the image
+   docker build -t dummy-logger-server .
+   
+   # Run the container
+   docker run -p 8080:8080 dummy-logger-server
+   ```
+
+3. The containerized server will be available at http://localhost:8080
+
+### Option 3: Build Binary
+
+1. Build the executable:
+   ```bash
+   # On Windows
+   build.bat
+   
+   # On Linux/Mac
+   go build -o dummy-logger-server main.go
+   ```
+
+2. Run the binary:
+   ```bash
+   ./dummy-logger-server
+   ```
 
 ## Example Usage
 
