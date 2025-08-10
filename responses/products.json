@@ -1,0 +1,23 @@
+[
+  {
+    "id": "prod-001",
+    "name": "Laptop Computer",
+    "price": 999.99,
+    "category": "electronics",
+    "description": "High-performance laptop for work and gaming"
+  },
+  {
+    "id": "prod-002",
+    "name": "Wireless Mouse",
+    "price": 29.99,
+    "category": "electronics",
+    "description": "Ergonomic wireless mouse with long battery life"
+  },
+  {
+    "id": "prod-003",
+    "name": "Coffee Mug",
+    "price": 12.99,
+    "category": "home",
+    "description": "Ceramic coffee mug with heat retention"
+  }
+]

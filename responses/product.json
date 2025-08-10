@@ -1,0 +1,7 @@
+{
+  "id": "prod-001",
+  "name": "Laptop Computer",
+  "price": 999.99,
+  "category": "electronics",
+  "description": "High-performance laptop for work and gaming"
+}
