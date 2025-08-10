@@ -228,7 +228,7 @@ func main() {
 		})
 	}).Methods("GET")
 
-	// Echo endpoint - returns exactly what it receives
+	// Echo endpoint - returns only the request body
 	r.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
 		// Read the request body
 		body, err := io.ReadAll(r.Body)
@@ -238,32 +238,21 @@ func main() {
 			return
 		}
 
-		// Create response with all request information
-		response := map[string]interface{}{
-			"method":      r.Method,
-			"url":         r.URL.String(),
-			"path":        r.URL.Path,
-			"query":       r.URL.Query(),
-			"headers":     r.Header,
-			"body":        string(body),
-			"host":        r.Host,
-			"remoteAddr":  r.RemoteAddr,
-			"userAgent":   r.UserAgent(),
-			"contentType": r.Header.Get("Content-Type"),
-			"timestamp":   time.Now().Format(time.RFC3339),
-		}
-
-		// Try to parse body as JSON if it's JSON content
+		// If body is JSON, try to parse and return as JSON
 		if strings.Contains(r.Header.Get("Content-Type"), "application/json") && len(body) > 0 {
 			var jsonBody interface{}
 			if err := json.Unmarshal(body, &jsonBody); err == nil {
-				response["parsedBody"] = jsonBody
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(jsonBody)
+				return
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		// For non-JSON or invalid JSON, return the raw body
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(response)
+		w.Write(body)
 	})
 
 	// Catch-all handler for unmatched routes (must be last)
