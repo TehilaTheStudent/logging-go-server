@@ -176,20 +176,23 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Catch-all handler for unmatched routes
+// Catch-all handler for unmatched routes, but dont return error
 func catchAllHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("!!! UNMATCHED ROUTE !!! Method: %s, Path: %s", r.Method, r.URL.Path)
 	
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Served-By", "dummy-logger-server")
 	w.Header().Set("X-Timestamp", time.Now().Format(time.RFC3339))
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusOK)
 	
 	response := map[string]interface{}{
-		"error":   "Route not found",
 		"method":  r.Method,
 		"path":    r.URL.Path,
 		"message": "This route is not defined in the OpenAPI specification",
+		"body":    r.Body,
+		"url":     r.URL,
+		"header":  r.Header,
+		"status":  http.StatusOK,
 	}
 	
 	json.NewEncoder(w).Encode(response)
