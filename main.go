@@ -258,6 +258,33 @@ func main() {
 		w.Write(body)
 	})
 
+	// Error simulation endpoints
+	r.HandleFunc("/error/404", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Served-By", "dummy-logger-server")
+		w.Header().Set("X-Timestamp", time.Now().Format(time.RFC3339))
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error":   "Not Found",
+			"message": "The requested resource could not be found",
+			"status":  404,
+			"path":    r.URL.Path,
+		})
+	}).Methods("GET", "POST", "PUT", "DELETE")
+
+	r.HandleFunc("/error/500", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Served-By", "dummy-logger-server")
+		w.Header().Set("X-Timestamp", time.Now().Format(time.RFC3339))
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error":   "Internal Server Error",
+			"message": "An unexpected error occurred on the server",
+			"status":  500,
+			"path":    r.URL.Path,
+		})
+	}).Methods("GET", "POST", "PUT", "DELETE")
+
 	// Catch-all handler for unmatched routes (must be last)
 	r.PathPrefix("/").HandlerFunc(catchAllHandler)
 
@@ -281,6 +308,8 @@ func main() {
 	log.Println("  POST   /orders")
 	log.Println("  GET    /health")
 	log.Println("  *      /echo     (returns what it receives)")
+	log.Println("  *      /error/404 (simulates 404 Not Found)")
+	log.Println("  *      /error/500 (simulates 500 Internal Server Error)")
 	log.Println()
 
 	if err := http.ListenAndServe(":"+port, r); err != nil {
