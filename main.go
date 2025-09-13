@@ -64,6 +64,19 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			log.Println("--- REQUEST BODY ---")
 			log.Printf("Body Length: %d bytes", len(body))
 			log.Printf("Body Content: %s", string(body))
+			
+			// Check if the request body can be parsed as JSON
+			var jsonPayload interface{}
+			if err := json.Unmarshal(body, &jsonPayload); err != nil {
+				log.Printf("JSON Parse Status: the request cannot be parsed as json - %v", err)
+			} else {
+				log.Printf("JSON Parse Status: the request can be successfully parsed as json")
+				// Pretty print the parsed JSON
+				prettyJSON, err := json.MarshalIndent(jsonPayload, "", "  ")
+				if err == nil {
+					log.Printf("Pretty Printed JSON:\n%s", string(prettyJSON))
+				}
+			}
 		}
 
 		// Log form data if present
