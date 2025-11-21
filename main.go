@@ -13,6 +13,33 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// CORS middleware that allows all origins and handles preflight requests
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow any origin
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// Allow common methods
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		// Allow credentials (set to true so cookies/credentials are allowed)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Echo requested headers if present, otherwise provide a sensible default
+		if reqHeaders := r.Header.Get("Access-Control-Request-Headers"); reqHeaders != "" {
+			w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+		} else {
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Api-Key, Accept")
+		}
+
+		// For preflight requests, respond with 204 No Content and return
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Logger middleware that logs everything about the request
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +91,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			log.Println("--- REQUEST BODY ---")
 			log.Printf("Body Length: %d bytes", len(body))
 			log.Printf("Body Content: %s", string(body))
-			
+
 			// Check if the request body can be parsed as JSON
 			var jsonPayload interface{}
 			if err := json.Unmarshal(body, &jsonPayload); err != nil {
@@ -192,12 +219,12 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 // Catch-all handler for unmatched routes, but dont return error
 func catchAllHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("!!! UNMATCHED ROUTE !!! Method: %s, Path: %s", r.Method, r.URL.Path)
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Served-By", "dummy-logger-server")
 	w.Header().Set("X-Timestamp", time.Now().Format(time.RFC3339))
 	w.WriteHeader(http.StatusOK)
-	
+
 	response := map[string]interface{}{
 		"method":  r.Method,
 		"path":    r.URL.Path,
@@ -207,13 +234,16 @@ func catchAllHandler(w http.ResponseWriter, r *http.Request) {
 		"header":  r.Header,
 		"status":  http.StatusOK,
 	}
-	
+
 	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
 	// Create router
 	r := mux.NewRouter()
+
+	// Add CORS middleware first to handle preflight requests early
+	r.Use(corsMiddleware)
 
 	// Add logging middleware
 	r.Use(loggingMiddleware)
